@@ -132,6 +132,9 @@ def main(args_dict=None):
     # Set seed
     set_seed(training_args.seed)
 
+    # Set project name
+    os.environ["WANDB_PROJECT"] = "multilingual_zeroshot"
+
     num_labels = 3
     labels = ['entailment', 'neutral', 'contradiction']
 
@@ -187,6 +190,9 @@ def main(args_dict=None):
         compute_metrics=compute_metrics_fn,
     )
 
+    # disable wandb console logs
+    logging.getLogger('wandb.run_manager').setLevel(logging.WARNING)
+
     # Training
     if training_args.do_train:
         trainer.train(
@@ -230,7 +236,7 @@ def _mp_fn(index):
     # For xla_spawn (TPUs)
     main()
 
-def run_qg(args_dict):
+def run_nli(args_dict):
     main(args_dict=args_dict)
 
 
