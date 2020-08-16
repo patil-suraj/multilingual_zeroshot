@@ -26,7 +26,7 @@ from typing import Callable, Dict, Optional
 import numpy as np
 
 import nlp
-from transformers import MBartConfig, MBartTokenizer, EvalPrediction, GlueDataset
+from transformers import MBartConfig, MBartTokenizer, EvalPrediction
 from transformers import (
     HfArgumentParser,
     Trainer,
@@ -155,7 +155,7 @@ def main(args_dict=None):
         num_labels=num_labels,
         dropout=model_args.dropout,
         attention_dropout=model_args.attention_dropout,
-        finetuning_task=data_args.task_name,
+        finetuning_task="mnli",
         cache_dir=model_args.cache_dir,
     )
     tokenizer = MBartTokenizer.from_pretrained(
@@ -228,11 +228,11 @@ def main(args_dict=None):
             eval_result = trainer.evaluate(eval_dataset=eval_dataset)
 
             output_eval_file = os.path.join(
-                training_args.output_dir, f"eval_results_{eval_dataset.args.task_name}.txt"
+                training_args.output_dir, f"eval_results.txt"
             )
             if trainer.is_world_master():
                 with open(output_eval_file, "w") as writer:
-                    logger.info("***** Eval results {} *****".format(eval_dataset.args.task_name))
+                    logger.info("***** Eval results *****")
                     for key, value in eval_result.items():
                         logger.info("  %s = %s", key, value)
                         writer.write("%s = %s\n" % (key, value))
