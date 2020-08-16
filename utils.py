@@ -21,7 +21,7 @@ def get_mnli_map_fn(lang_id, max_length, tokenizer):
         return {
             "input_ids": enc["input_ids"],
             "attention_mask": enc["attention_mask"],
-            "labels": examples["label"]
+            "labels": list(examples["label"])
         }
   
     return convert_to_features
