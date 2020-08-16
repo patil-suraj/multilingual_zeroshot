@@ -174,7 +174,7 @@ def main(args_dict=None):
     map_fn = get_mnli_map_fn(data_args.lang, data_args.max_seq_length, tokenizer)
     
     train_dataset = nlp.load_dataset("multi_nli", split="train")
-    train_dataset = train_dataset.map(map_fn)
+    train_dataset = train_dataset.map(map_fn, batched=True, batch_size=512)
     train_dataset.set_format(type='torch', columns=columns)
     
     eval_dataset = (
@@ -182,7 +182,7 @@ def main(args_dict=None):
         if training_args.do_eval
         else None
     )
-    eval_dataset = eval_dataset.map(map_fn)
+    eval_dataset = eval_dataset.map(map_fn, batched=True, batch_size=512)
     eval_dataset.set_format(type='torch', columns=columns)
 
     def compute_metrics_fn(p: EvalPrediction):
@@ -219,7 +219,7 @@ def main(args_dict=None):
 
         # Loop to handle MNLI double evaluation (matched, mis-matched)
         mis_matched_dataset = nlp.load_dataset("multi_nli", split="validation_mismatched")
-        mis_matched_dataset = mis_matched_dataset.map(map_fn)
+        mis_matched_dataset = mis_matched_dataset.map(map_fn, batched=True, batch_size=512)
         mis_matched_dataset.set_format(type='torch', columns=columns)
         eval_datasets = [eval_dataset, mis_matched_dataset]
 
