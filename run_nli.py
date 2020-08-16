@@ -85,6 +85,12 @@ class ModelArguments:
     cache_dir: Optional[str] = field(
         default=None, metadata={"help": "Where do you want to store the pretrained models downloaded from s3"}
     )
+    dropout: float = field(
+        default=0.1, metadata={"help": "Dropout"}
+    )
+    attention_dropout: float = field(
+        default=0.1, metadata={"help": "Attention Dropout"}
+    )
 
 
 def main(args_dict=None):
@@ -96,7 +102,7 @@ def main(args_dict=None):
 
     if args_dict is not None:
         model_args, data_args, training_args = parser.parse_dict(args_dict)
-    if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
+    elif len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
         # If we pass only one argument to the script and it's the path to a json file,
         # let's parse it to get our arguments.
         model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
@@ -147,6 +153,8 @@ def main(args_dict=None):
     config = MBartConfig.from_pretrained(
         model_args.config_name if model_args.config_name else model_args.model_name_or_path,
         num_labels=num_labels,
+        dropout=model_args.dropout,
+        attention_dropout=model_args.attention_dropout,
         finetuning_task=data_args.task_name,
         cache_dir=model_args.cache_dir,
     )
