@@ -21,10 +21,11 @@ import logging
 import os
 import sys
 from dataclasses import dataclass, field
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, Optional, List
 
 import numpy as np
 
+import torch
 import nlp
 from transformers import MBartConfig, MBartTokenizer, EvalPrediction
 from transformers import (
@@ -41,6 +42,35 @@ from model import MBartForSequenceClassification
 
 logger = logging.getLogger(__name__)
 
+def trim_batch(
+    input_ids, pad_token_id, attention_mask=None,
+):
+    """Remove columns that are populated exclusively by pad_token_id"""
+    keep_column_mask = input_ids.ne(pad_token_id).any(dim=0)
+    if attention_mask is None:
+        return input_ids[:, keep_column_mask]
+    else:
+        return (input_ids[:, keep_column_mask], attention_mask[:, keep_column_mask])
+
+class DataCollator():
+    def __init__(self, tokenizer):
+        self.tokenizer = tokenizer
+
+    def __call__(self, batch: List) -> Dict[str, torch.Tensor]:
+        input_ids = torch.stack([example['input_ids'] for example in batch])
+        attention_mask = torch.stack([example['attention_mask'] for example in batch])
+        labels = torch.stack([example['labels'] for example in batch])
+
+        pad_token_id = self.tokenizer.pad_token_id
+        input_ids, attention_mask = trim_batch(input_ids, pad_token_id, attention_mask=attention_mask)
+
+        return {
+            "input_ids": input_ids,
+            "attention_mask": attention_mask,
+            "labels": labels
+        }
+
+
 @dataclass
 class DataTrainingArguments:
     """
@@ -56,7 +86,7 @@ class DataTrainingArguments:
         metadata={"help": "The input data dir. Should contain the .tsv files (or other data files) for the task."}
     )
     max_seq_length: int = field(
-        default=192,
+        default=512,
         metadata={
             "help": "The maximum total input sequence length after tokenization. Sequences longer "
             "than this will be truncated, sequences shorter will be padded."
@@ -196,6 +226,7 @@ def main(args_dict=None):
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
         compute_metrics=compute_metrics_fn,
+        data_collator=DataCollator(tokenizer),
     )
 
     # disable wandb console logs
