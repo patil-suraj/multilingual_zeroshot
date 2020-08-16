@@ -12,7 +12,7 @@ def get_mnli_map_fn(lang_id, max_length, tokenizer):
         enc = tokenizer.prepare_seq2seq_batch(
             src_texts=[(premise, hyp) for premise, hyp in zip(premises, hyps)],
             src_lang=lang_id,
-            max_length=192,
+            max_length=max_length,
             padding="max_length",
             truncation=True,
             return_tensors=None
